@@ -41,7 +41,6 @@
             src="@/assets/ArrowSide.svg"
             alt="arrow right icon"
             @click="nextMonth()"
-
           >
         </div>
         <div class="calendar-body">
@@ -52,7 +51,6 @@
             >
               {{day}}
             </span>
-
           </div>
           <div class="calendar-container">
             <div
@@ -64,13 +62,22 @@
             </div>
             <div
               class="calendar-numbers"
-              v-for="(n, index) in currentDate.date"
+              v-for="(n, index) in lastDate()"
               :key="'current' + index"
+            >
+              {{n}}
+            </div>
+            <div
+              class="calendar-prevNumbers"
+              v-for="(n, index) in (7 - (firstDayNextMonth() || 7))"
+              :key="'next' + index"
             >
               {{n}}
             </div>
           </div>
         </div>
+        <button class="button-black">Отмена</button>
+        <button class="button-orange">Обновить</button>
       </div>
     </div>
   </div>
@@ -80,7 +87,7 @@
 export default {
   data() {
     return {
-      weekdays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пн', 'Сб', 'Вс'],
+      weekdays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
       month: [
         'Январь',
         'Февраль',
@@ -113,41 +120,30 @@ export default {
       if (this.currentDate.month === 0) {
         this.currentDate.month = 11;
         this.currentDate.year -= 1;
-        this.currentDate.date = new Date(
-          this.currentDate.year - 1,
-          11,
-          0,
-        ).getDate();
       } else {
         this.currentDate.month -= 1;
-        this.currentDate.date = new Date(
-          this.currentDate.year,
-          this.currentDate.month - 1,
-          0,
-        ).getDate();
       }
     },
     nextMonth() {
       if (this.currentDate.month === 11) {
         this.currentDate.month = 0;
         this.currentDate.year += 1;
-        this.currentDate.date = new Date(
-          this.currentDate.year + 1,
-          0,
-          0,
-        ).getDate();
       } else {
         this.currentDate.month += 1;
-        this.currentDate.date = new Date(
-          this.currentDate.year,
-          this.currentDate.month + 1,
-          0,
-        ).getDate();
       }
     },
     prevMonthDays() {
-      const year = this.currentDate.month === 0 ? this.currentDate.year - 1 : this.currentDate.year;
+      const year = this.currentDate.month === 0
+        ? this.currentDate.year - 1
+        : this.currentDate.year;
       const month = this.currentDate.month === 0 ? 12 : this.currentDate.month;
+      return new Date(year, month, 0).getDate();
+    },
+    nextMonthDays() {
+      const year = this.currentDate.month === 11
+        ? this.currentDate.year + 1
+        : this.currentDate.year;
+      const month = this.currentDate.month === 11 ? 0 : this.currentDate.month;
       return new Date(year, month, 0).getDate();
     },
     firstDay() {
@@ -156,6 +152,20 @@ export default {
         this.currentDate.month,
         0,
       ).getDay();
+    },
+    firstDayNextMonth() {
+      return new Date(
+        this.currentDate.year,
+        this.currentDate.month + 1,
+        0,
+      ).getDay();
+    },
+    lastDate() {
+      return new Date(
+        this.currentDate.year,
+        this.currentDate.month + 1,
+        0,
+      ).getDate();
     },
   },
   created() {
