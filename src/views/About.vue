@@ -20,13 +20,13 @@
     </div>
     <div class="calendar">
       <ul class="suggestions">
-        <li>Весь срок</li>
-        <li>Сегодня</li>
-        <li>Вчера</li>
-        <li>Последние 7 дней</li>
-        <li>Последние 30 дней</li>
-        <li>В этом месяце</li>
-        <li>Прошлый месяц</li>
+        <li @click="setSelectedDays('All')">Весь срок</li>
+        <li @click="setSelectedDays('Today')">Сегодня</li>
+        <li @click="setSelectedDays('Yesterday')">Вчера</li>
+        <li @click="setSelectedDays('Last7')">Последние 7 дней</li>
+        <li @click="setSelectedDays('Last30')">Последние 30 дней</li>
+        <li @click="setSelectedDays('ThisMonth')">В этом месяце</li>
+        <li @click="setSelectedDays('PrevMonth')">Прошлый месяц</li>
       </ul>
       <div class="calendar-field">
         <div class="calendar-header">
@@ -62,10 +62,32 @@
             </div>
             <div
               class="calendar-numbers"
+              v-bind:class="{'selected': selectedDays.includes(new Date(
+                currentDate.year,
+                currentDate.month,
+                n,
+              ).getTime())}"
               v-for="(n, index) in lastDate()"
               :key="'current' + index"
+              @click="handleClick"
             >
-              {{n}}
+              <div
+                class="before"
+                v-show="showBefore(new Date(
+                currentDate.year,
+                currentDate.month,
+                n,
+              ).getTime())"
+              ></div>
+              <div>{{n}}</div>
+              <div
+                class="after"
+                v-show="showAfter(new Date(
+                currentDate.year,
+                currentDate.month,
+                n,
+              ).getTime())"
+              ></div>
             </div>
             <div
               class="calendar-prevNumbers"
@@ -107,6 +129,7 @@ export default {
         month: 0,
         year: 0,
       },
+      selectedDays: [],
     };
   },
   methods: {
@@ -166,6 +189,125 @@ export default {
         this.currentDate.month + 1,
         0,
       ).getDate();
+    },
+    handleClick(event) {
+      if (this.selectedDays.length === 2) {
+        this.selectedDays = [];
+      }
+      if (!this.selectedDays.includes(new Date(
+        this.currentDate.year,
+        this.currentDate.month,
+        event.target.innerHTML,
+      ).getTime())) {
+        this.selectedDays.push(new Date(
+          this.currentDate.year,
+          this.currentDate.month,
+          event.target.innerHTML,
+        ).getTime());
+      }
+      console.log(this.selectedDays);
+    },
+    showBefore(n) {
+      if (this.selectedDays.length < 2) {
+        return false;
+      }
+      if (n > Math.min(...this.selectedDays)
+        && n <= Math.max(...this.selectedDays)) {
+        return true;
+      }
+      return false;
+    },
+    showAfter(n) {
+      if (this.selectedDays.length < 2) {
+        return false;
+      }
+      if (n >= Math.min(...this.selectedDays)
+        && n < Math.max(...this.selectedDays)) {
+        return true;
+      }
+      return false;
+    },
+    setSelectedDays(range) {
+      if (range === 'All') {
+        this.selectedDays = [-Infinity, Infinity];
+      }
+      if (range === 'Today') {
+        this.getCurrentDate();
+        this.selectedDays = [new Date(
+          this.currentDate.year,
+          this.currentDate.month,
+          this.currentDate.date,
+        ).getTime()];
+      }
+      if (range === 'Yesterday') {
+        this.getCurrentDate();
+        this.selectedDays = [new Date(
+          this.currentDate.year,
+          this.currentDate.month,
+          this.currentDate.date - 1,
+        ).getTime()];
+      }
+      if (range === 'Last7') {
+        this.getCurrentDate();
+        this.selectedDays = [
+          new Date(
+            this.currentDate.year,
+            this.currentDate.month,
+            this.currentDate.date - 6,
+          ).getTime(),
+          new Date(
+            this.currentDate.year,
+            this.currentDate.month,
+            this.currentDate.date,
+          ).getTime(),
+        ];
+      }
+      if (range === 'Last30') {
+        this.getCurrentDate();
+        this.selectedDays = [
+          new Date(
+            this.currentDate.year,
+            this.currentDate.month,
+            this.currentDate.date - 29,
+          ).getTime(),
+          new Date(
+            this.currentDate.year,
+            this.currentDate.month,
+            this.currentDate.date,
+          ).getTime(),
+        ];
+      }
+      if (range === 'ThisMonth') {
+        this.getCurrentDate();
+        this.selectedDays = [
+          new Date(
+            this.currentDate.year,
+            this.currentDate.month,
+            1,
+          ).getTime(),
+          new Date(
+            this.currentDate.year,
+            this.currentDate.month,
+            this.currentDate.date,
+          ).getTime(),
+        ];
+      }
+      if (range === 'PrevMonth') {
+        this.getCurrentDate();
+        this.selectedDays = [
+          new Date(
+            this.currentDate.year,
+            this.currentDate.month -= 1,
+            1,
+          ).getTime(),
+          new Date(
+            this.currentDate.year,
+            this.currentDate.month += 1,
+            0,
+          ).getTime(),
+        ];
+        this.currentDate.month -= 1;
+      }
     },
   },
   created() {
@@ -287,6 +429,48 @@ export default {
 .calendar-container {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-numbers {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  transform: translateX(50%);
+}
+
+.before {
+  position: absolute;
+  left: -10px;
+  display: block;
+  height: 20px;
+  width: 20px;
+  background-color:rgba(255, 116, 57, 0.2);
+  z-index: -1;
+}
+
+.after {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  display: block;
+  height: 20px;
+  width: 20px;
+  background-color: rgba(255, 116, 57, 0.2);
+  z-index: -2;
+}
+
+.selected {
+  background-color: orangered;
+}
+
+.calendar-prevNumbers:hover,
+.calendar-numbers:hover {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background-color: #aaa;
 }
 
 .calendar-prevNumbers {
