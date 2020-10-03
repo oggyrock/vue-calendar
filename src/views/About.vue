@@ -54,11 +54,33 @@
           </div>
           <div class="calendar-container">
             <div
-              class="calendar-prevNumbers"
+              class="calendar-numbers inactive"
+              v-bind:class="{'selected': selectedDays.includes(new Date(
+                currentDate.year,
+                currentDate.month - 1,
+                prevMonthDays() - firstDay() + n,
+              ).getTime())}"
               v-for="(n, index) in firstDay()"
               :key="'prev' + index"
+              @click="handleClick"
             >
-              {{prevMonthDays() - firstDay() + n}}
+              <div
+                class="before"
+                v-show="showBefore(new Date(
+                currentDate.year,
+                currentDate.month - 1,
+                prevMonthDays() - firstDay() + n,
+              ).getTime())"
+              ></div>
+              <div data-month="-1">{{prevMonthDays() - firstDay() + n}}</div>
+              <div
+                class="after"
+                v-show="showAfter(new Date(
+                currentDate.year,
+                currentDate.month - 1,
+                prevMonthDays() - firstDay() + n,
+              ).getTime())"
+              ></div>
             </div>
             <div
               class="calendar-numbers"
@@ -79,7 +101,7 @@
                 n,
               ).getTime())"
               ></div>
-              <div>{{n}}</div>
+              <div data-month="0">{{n}}</div>
               <div
                 class="after"
                 v-show="showAfter(new Date(
@@ -90,11 +112,33 @@
               ></div>
             </div>
             <div
-              class="calendar-prevNumbers"
+              class="calendar-numbers inactive"
+              v-bind:class="{'selected': selectedDays.includes(new Date(
+                currentDate.year,
+                currentDate.month + 1,
+                n,
+              ).getTime())}"
               v-for="(n, index) in (7 - (firstDayNextMonth() || 7))"
               :key="'next' + index"
+              @click="handleClick"
             >
-              {{n}}
+              <div
+                class="before"
+                v-show="showBefore(new Date(
+                currentDate.year,
+                currentDate.month + 1,
+                n,
+              ).getTime())"
+              ></div>
+              <div data-month="1">{{n}}</div>
+              <div
+                class="after"
+                v-show="showAfter(new Date(
+                currentDate.year,
+                currentDate.month + 1,
+                n,
+              ).getTime())"
+              ></div>
             </div>
           </div>
         </div>
@@ -196,15 +240,16 @@ export default {
       }
       if (!this.selectedDays.includes(new Date(
         this.currentDate.year,
-        this.currentDate.month,
+        this.currentDate.month + +event.target.dataset.month,
         event.target.innerHTML,
       ).getTime())) {
         this.selectedDays.push(new Date(
           this.currentDate.year,
-          this.currentDate.month,
+          this.currentDate.month + +event.target.dataset.month,
           event.target.innerHTML,
         ).getTime());
       }
+      console.log(event.target.dataset.month);
       console.log(this.selectedDays);
     },
     showBefore(n) {
@@ -446,7 +491,6 @@ export default {
   height: 20px;
   width: 20px;
   background-color:rgba(255, 116, 57, 0.2);
-  z-index: -1;
 }
 
 .after {
@@ -457,14 +501,13 @@ export default {
   height: 20px;
   width: 20px;
   background-color: rgba(255, 116, 57, 0.2);
-  z-index: -2;
 }
 
 .selected {
   background-color: orangered;
 }
 
-.calendar-prevNumbers:hover,
+.inactive:hover,
 .calendar-numbers:hover {
   display: block;
   width: 20px;
@@ -473,7 +516,7 @@ export default {
   background-color: #aaa;
 }
 
-.calendar-prevNumbers {
+.inactive {
   color: #aaa;
 }
 
